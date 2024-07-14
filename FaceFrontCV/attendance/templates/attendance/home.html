@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Face Attendance System</title>
+    <style>
+        body {
+            background-color: #FFF7FC;
+            color: #000000;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            /* Prevents scrollbars if the content overflows */
+        }
+
+        .buttons-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            position: absolute;
+            /* Positions the buttons above the video */
+            top: 20px;
+            /* Adjust this value to position the buttons as needed */
+            z-index: 2;
+            /* Ensures buttons are clickable and above the video */
+        }
+
+        .button {
+            padding: 10px 20px;
+            background-color: #8B93FF;
+            color: #FFFFFF;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .button:hover,
+        .button:focus {
+            background-color: #FF71CD;
+        }
+
+        .button:active {
+            background-color: #7A7EFF;
+        }
+
+        video {
+            /* Makes the video utilize more of the available space */
+            width: 80vw;
+            height: 80vh;
+            border-radius: 8px;
+            position: relative;
+            /* Ensures proper stacking with the button container */
+            z-index: 1;
+        }
+    </style>
+
+
+
+</head>
+
+<body>
+    <h1>Attendance System</h1>
+    <div class="buttons-container">
+        <button class="button" onclick="startCamera()">Start Camera</button>
+        <button class="button" onclick="stopCamera()">Stop Camera</button>
+        <button class="button" onclick="downloadExcel()">Download Excel</button>
+    </div>
+
+    <video id="video" width="640" height="480" autoplay></video>
+    <canvas id="canvas" width="640" height="480" style="display: none;"></canvas>
+
+    <script>
+        const video = document.getElementById('video');
+
+        function startCamera() {
+            if (navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(function (stream) {
+                        video.srcObject = stream;
+                    })
+                    .catch(function (err) {
+                        console.log("Something went wrong!", err);
+                    });
+            }
+        }
+
+        function stopCamera() {
+            let stream = video.srcObject;
+            let tracks = stream.getTracks();
+
+            tracks.forEach(function (track) {
+                track.stop();
+            });
+
+            video.srcObject = null;
+        }
+
+        function captureImage() {
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob(sendImageToServer, 'image/jpeg');
+        }
+
+        function sendImageToServer(blob) {
+            const formData = new FormData();
+            formData.append('image', blob);
+
+            fetch('/process-image/', {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Success:', data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+        }
+
+        // Example: capture an image every 5 seconds
+        setInterval(captureImage, 5000);
+    </script>
+</body>
+
+</html>
