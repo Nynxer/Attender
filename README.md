@@ -27,4 +27,5 @@ You need Python installed on your machine. You can download it from [python.org]
 
 1. Clone the repo:
 2. Navigate to the project directory:
-3. Install the required packages:
+3. Install the required packages listed in the `requirements.txt` file
+
